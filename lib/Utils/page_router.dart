@@ -8,4 +8,9 @@ class PageRouter {
   void nexPage({Widget page}) {
     Navigator.push(ctx, MaterialPageRoute(builder: (context) => page));
   }
+
+  void nextPageAndRemove({Widget page}) {
+    Navigator.pushAndRemoveUntil(
+        ctx, MaterialPageRoute(builder: (context) => page), (route) => false);
+  }
 }

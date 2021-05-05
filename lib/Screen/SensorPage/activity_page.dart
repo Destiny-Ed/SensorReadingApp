@@ -4,6 +4,7 @@ import 'package:all_sensors/all_sensors.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sensor_app/Provider/save_file.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_timer/simple_timer.dart';
 
 class ActivityPage extends StatefulWidget {
@@ -14,26 +15,43 @@ class ActivityPage extends StatefulWidget {
 }
 
 class _ActivityPageState extends State<ActivityPage> {
+  Future<SharedPreferences> _pref = SharedPreferences.getInstance();
   // TimerController _timerController;
 
   TimerStatus status = TimerStatus.pause;
   bool isDone = false;
 
   //Sensor
-  List<String> _accelerometerValues;
+  List<String> _accelerometerValues; //Accelerometer
+  List<String> _gyroscopeValues; //GyroscopeValues
 
   /* Stream for listening to sensor events*/
   List<StreamSubscription<dynamic>> _streamSubscriptions =
       <StreamSubscription<dynamic>>[];
 
+  int userId;
+
   @override
   void initState() {
+    /*Initialize Sensor list values */
     _accelerometerValues = <String>[];
+    _gyroscopeValues = <String>[];
     //Initialize timer controller
     // _timerController = TimerController(this);
+    getId();
+
     super.initState();
   }
 
+  void getId() async {
+    final id = await _pref;
+
+    setState(() {
+      userId = id.getInt("userId");
+    });
+  }
+
+  ///Handles the accelerometer sensor
   void startAccelerometerSensor(String activityValue) {
     double timeStamp = DateTime.now()
         .millisecondsSinceEpoch
@@ -51,44 +69,72 @@ class _ActivityPageState extends State<ActivityPage> {
           event.z,
         ];
 
-        print(values);
-
-        print("Joining");
+        //Convert the event values to comma separated and save them in a string
+        //With the following format
+        //:Userid, ActivityLabel, Values(timestamp, xAxis, yAxis, zAxis);
         final s =
-            "Destiny Ed, ${widget.activityValue}, " + values.join(", ") + ";";
+            "$userId, ${widget.activityValue}, " + values.join(", ") + ";";
         print(s);
 
         // _accelerometerValues = <double>[timeStamp, event.x, event.y, event.z];
-        _accelerometerValues.add(s);
+        _accelerometerValues.add(s); //Add to the the _accelerometerValues
       });
     }));
   }
 
-  void stopAdSaveSensorReading(List<String> _accelerometerFinalReading) async {
+//Function To stop the Accelerometer and GyroScope sensor
+  void stopAdSaveSensorReading(
+      {List<String> accelerometerFinalReading,
+      List<String> gyroscopeFinalReading}) async {
     for (StreamSubscription<dynamic> subscription in _streamSubscriptions) {
-      subscription.cancel();
+      subscription.cancel(); //Cancel all running sensors
     }
 
-    print("This is the accelerameter value ${_accelerometerValues.join(" ")}");
+    //Save Accelerormeter values and timestamps after stopping the sensor
+    SaveAccelValues(accelerometerFinalReading)
+        .localPath()
+        .then((value) => print(value));
 
-    //Request for permission here
-    final status = Permission.storage;
+    //Save GyroScope Values and timestamps
+    SaveGyroValues(gyroscopeFinalReading)
+        .localPath()
+        .then((value) => print(value));
+  }
 
-    if (await status.isGranted) {
-      SaveFile(_accelerometerFinalReading)
-          .localPath()
-          .then((value) => print(value));
-    } else {
-      status.request();
-      SaveFile(_accelerometerFinalReading)
-          .localPath()
-          .then((value) => print(value));
-    }
+  //Gyroscope Function : Start
+  void startGyroscopeSensor(String activityValue) {
+    double timeStamp = DateTime.now()
+        .millisecondsSinceEpoch
+        .toDouble(); //Get the current timeStamp
+
+    //
+    _streamSubscriptions.add(gyroscopeEvents.listen((GyroscopeEvent event) {
+      setState(() {
+        timeStamp = DateTime.now().microsecondsSinceEpoch.toDouble();
+        final values = <double>[
+          timeStamp,
+          event.x,
+          event.y,
+          event.z,
+        ];
+
+        //Convert the event values to comma separated and save them in a string
+        //With the following format
+        //:Userid, ActivityLabel, Values(timestamp, xAxis, yAxis, zAxis);
+        final s =
+            "$userId, ${widget.activityValue}, " + values.join(", ") + ";";
+        print("Gyroscope $s");
+
+        // _accelerometerValues = <double>[timeStamp, event.x, event.y, event.z];
+        _gyroscopeValues.add(s); //Add to the the _gyroscopeValues
+      });
+    }));
   }
 
   @override
   void dispose() {
     _accelerometerValues.clear();
+    _gyroscopeValues.clear();
 
     //Stop all sensor reading
     for (StreamSubscription<dynamic> subscription in _streamSubscriptions) {
@@ -107,11 +153,11 @@ class _ActivityPageState extends State<ActivityPage> {
         body: CustomScrollView(
       slivers: [
         SliverAppBar(
-          title: Text(widget.activityKey),
+          title: Text(widget.activityKey.toUpperCase()),
           expandedHeight: 250,
           flexibleSpace: FlexibleSpaceBar(
-            background: Icon(Icons.switch_right_rounded),
-          ),
+              // background: Icon(Icons.switch_right_rounded),
+              ),
         ),
         SliverToBoxAdapter(
           child: Container(
@@ -127,12 +173,38 @@ class _ActivityPageState extends State<ActivityPage> {
                   width: 250,
                   height: 250,
                   child: SimpleTimer(
-                      onStart: () {
-                        startAccelerometerSensor(widget.activityValue);
+                      onStart: () async {
                         //Call Sensor Method Here
+                        //Request for permission here
+                        final status = Permission.storage;
+
+                        if (await status.isGranted) {
+                          startAccelerometerSensor(widget.activityValue);
+
+                          startGyroscopeSensor(
+                              widget.activityValue); //Start Reading
+                        } else {
+                          status.request().then((value) {
+                            //Request for permission and Start Reading if permission is granter else show error snackbar
+                            if (value.isGranted) {
+                              startAccelerometerSensor(widget.activityValue);
+
+                              startGyroscopeSensor(widget.activityValue);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      "You must accept storage permission to perform this action"),
+                                ),
+                              );
+                            }
+                          });
+                        }
                       },
                       onEnd: () {
-                        stopAdSaveSensorReading(_accelerometerValues);
+                        stopAdSaveSensorReading(
+                            accelerometerFinalReading: _accelerometerValues,
+                            gyroscopeFinalReading: _gyroscopeValues);
                         setState(() {
                           isDone = true;
                         });
@@ -141,7 +213,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       strokeWidth: 20.0,
                       // controller: _timerController,
                       status: status,
-                      duration: Duration(seconds: 5)),
+                      duration: Duration(minutes: 3)),
                 ),
 
                 //Activity start and done button

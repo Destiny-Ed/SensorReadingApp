@@ -2,10 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:sensor_app/Screen/SensorPage/activity_page.dart';
+import 'package:sensor_app/Screen/SensorPage/magneto_meter.dart';
 import 'package:sensor_app/Screen/SensorPage/sensor_home.dart';
 import 'package:sensor_app/Utils/page_router.dart';
 
 class Home extends StatefulWidget {
+  final String name;
+  Home(this.name);
   @override
   _HomeState createState() => _HomeState();
 }
@@ -37,7 +40,7 @@ class _HomeState extends State<Home> {
                 Container(
                   margin: EdgeInsets.symmetric(vertical: 10),
                   child: Text(
-                    "Start With An Activity",
+                    "${widget.name} Start With An Activity",
                     style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -76,6 +79,11 @@ class _HomeState extends State<Home> {
           ))
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+          label: Text("Compass"),
+          onPressed: () {
+            PageRouter(ctx: context).nexPage(page: Magneto());
+          }),
     );
   }
 
