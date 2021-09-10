@@ -1,0 +1,1 @@
+String websocketUrl = "wss://medikal-backend.herokuapp.com/ws/get-sensor-readings";

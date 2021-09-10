@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
-
 //Class to Handle the saving of Accelerometer values to Phone Storage
 class SaveAccelValues {
   List<String> accelerometerSensors;
@@ -16,7 +15,7 @@ class SaveAccelValues {
 
     String storepath = "";
 
-    ///storage/emulated/0/Android/data/com.reader.sensor_app/files
+    ///storage/emulated/0/Android/data/app.sensor/files
 
     for (int i = 1; i < path.length; i++) {
       String folder = path[i];
@@ -69,7 +68,7 @@ class SaveGyroValues {
 
     String storepath = "";
 
-    ///storage/emulated/0/Android/data/com.reader.sensor_app/files
+    ///storage/emulated/0/Android/data/app.sensor/files
 
     for (int i = 1; i < path.length; i++) {
       String folder = path[i];

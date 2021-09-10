@@ -1,4 +1,4 @@
-package com.reader.sensor_app
+package app.sensor
 
 import android.content.Context
 import android.hardware.Sensor

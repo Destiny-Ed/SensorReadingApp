@@ -38,6 +38,12 @@ dependencies:
   shared_preferences: ^2.0.5
 
   flutter_text_form_field : ^0.0.2
+  firebase_core: ^1.5.0
+  cloud_firestore: ^2.5.0
+  flutter_activity_recognition: ^1.1.2
+  activity_recognition_flutter: ^4.0.4
+  graphql_flutter: ^5.0.0
+  web_socket_channel: ^2.1.0
 
 dev_dependencies:
   flutter_test:
