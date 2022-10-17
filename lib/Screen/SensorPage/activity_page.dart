@@ -4,10 +4,6 @@ import 'package:activity_recognition_flutter/activity_recognition_flutter.dart';
 import 'package:all_sensors/all_sensors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_activity_recognition/flutter_activity_recognition.dart';
-import 'package:flutter_activity_recognition/models/permission_request_result.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:sensor_app/Contants/websocket_url.dart';
-import 'package:sensor_app/Schema/set_reading.dart';
 import 'package:sensor_app/Utils/dart_to_golang.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_timer/simple_timer.dart';
@@ -31,7 +27,7 @@ class _ActivityPageState extends State<ActivityPage> {
   final activityRecognition = FlutterActivityRecognition.instance;
 
   ///Activity
-  ActivityRecognition _activityRecognition = ActivityRecognition.instance;
+  ActivityRecognition _activityRecognition = ActivityRecognition();
 
   TimerStatus status = TimerStatus.pause;
   bool isDone = false;
@@ -51,7 +47,7 @@ class _ActivityPageState extends State<ActivityPage> {
 
   void _startTracking() {
     _activityRecognition
-        .startStream(runForegroundService: false)
+        .activityStream(runForegroundService: false)
         .listen((event) {
       setState(() {
         activity = event.type.toString();
@@ -228,10 +224,10 @@ class _ActivityPageState extends State<ActivityPage> {
               children: [
                 StreamBuilder(
                   stream: channel.stream,
-                  builder: (context, snapshot){
-                    if(snapshot.hasData){
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
                       return Text(snapshot.data.toString());
-                    }else{
+                    } else {
                       return Text("Is Loading");
                     }
                   },
