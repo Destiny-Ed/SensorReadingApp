@@ -12,7 +12,7 @@
 
     
    <application
-        android:label="sensor_app"
+        android:label="Sensor App User"
         android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher">
         <activity
